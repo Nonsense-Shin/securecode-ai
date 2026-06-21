@@ -24,7 +24,7 @@ The analytical model locates complex logical vulnerabilities (e.g., SQL Injectio
 
 ## Operational Interface Display
 
-<img width="619" height="431" alt="Screenshot 2026-06-21 143501" src="https://github.com/user-attachments/assets/c773d6d5-70c0-4e99-87a2-4acf9b45b566" />
+<img width="800" height="600" alt="Screenshot 2026-06-21 143501" src="https://github.com/user-attachments/assets/c773d6d5-70c0-4e99-87a2-4acf9b45b566" />
 
 
 ---
