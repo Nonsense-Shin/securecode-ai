@@ -1,8 +1,8 @@
-# SecureCode-AI // Static Vulnerability Analysis Terminal
+# SecureCode-AI 
 
 SecureCode-AI is an asynchronous AI operational terminal engineered to perform automated static application security testing (SAST). Powered by **FastAPI** and integrated natively with the **Google Gemini 2.5 Flash** engine, the platform ingests raw source code scripts and executes multi-layered logical vulnerability assessments, mapping architectural flaws and outputting precise refactored remediations in real time.
 
-> This is a prototype. The modified and up-to date version is available for comapanies only, that want their source code audited.
+> This is a prototype. The modified and up-to date version is available for comapanies only.
 
 ---
 
@@ -68,7 +68,7 @@ pip install -r requirements.txt
 ---
 
 4. Configure Local Environment Token 
-`Create a .env file within the root project directory:`
+- Create a `.env` file within the root project directory:
 
 *GEMINI_API_KEY="YOUR_SECRET_GOOGLE_AI_STUDIO_TOKEN"*
 
