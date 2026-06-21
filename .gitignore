@@ -1,0 +1,16 @@
+# Python runtime caching layers
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Sensitive infrastructure tokens (Critical Perimeter Defense)
+.env
+.env.*
+secrets.json
+
+# Local Virtual Environments
+.venv/
+venv/
+env/

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureCode Shin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-void: #020204;
+            --bg-terminal: #0d0614;
+            --violet-core: #4c1d95;
+            --violet-glow: #8b5cf6;
+            --cyber-blue: #00f0ff;
+            --text-white: #f8fafc;
+            --text-dim: #64748b;
+            --alert-red: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; min-height: 100%; }
+        body {
+            position: relative;
+            background-color: var(--bg-void);
+            color: var(--text-white);
+            font-family: 'Fira Code', monospace;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            inset: -20%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::before {
+            background:
+                radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.28), transparent 28%),
+                radial-gradient(circle at 80% 30%, rgba(0, 240, 255, 0.2), transparent 24%),
+                radial-gradient(circle at 50% 80%, rgba(76, 29, 149, 0.22), transparent 30%),
+                radial-gradient(circle at 60% 50%, rgba(236, 72, 153, 0.08), transparent 18%);
+            filter: blur(20px) saturate(1.15);
+            animation: driftGlow 12s ease-in-out infinite alternate, driftPulse 9s ease-in-out infinite;
+        }
+        body::after {
+            background-image:
+                radial-gradient(rgba(255, 255, 255, 0.95) 1px, transparent 1.2px),
+                radial-gradient(rgba(0, 240, 255, 0.7) 0.9px, transparent 1.2px),
+                radial-gradient(rgba(139, 92, 246, 0.55) 0.8px, transparent 1.2px);
+            background-size: 90px 90px, 140px 140px, 220px 220px;
+            background-position: 0 0, 45px 65px, 120px 30px;
+            opacity: 0.32;
+            animation: starDrift 28s linear infinite, starPulse 6s ease-in-out infinite;
+        }
+        .ambient-field {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .terminal-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--bg-terminal);
+            border: 2px solid var(--violet-core);
+            border-radius: 8px;
+            box-shadow: 0 0 35px rgba(139, 92, 246, 0.15), 0 0 10px rgba(0, 240, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 750px;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0);
+            animation: terminalFloat 7.5s ease-in-out infinite;
+        }
+        .terminal-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.06) 45%, transparent 70%);
+            transform: translateX(-120%);
+            animation: sheenSweep 8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .terminal-container > * {
+            position: relative;
+            z-index: 1;
+        }
+        .terminal-header {
+            background: #140b24;
+            border-bottom: 1px solid var(--violet-core);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-title {
+            color: var(--cyber-blue);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+        }
+        .terminal-body {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .log-entry { font-size: 14px; line-height: 1.6; }
+        .system-prefix { color: var(--violet-glow); font-weight: bold; margin-right: 8px; }
+        .telemetry-status { color: var(--cyber-blue); }
+        
+        .report-block {
+            background: #06020a;
+            border-left: 3px solid var(--cyber-blue);
+            padding: 20px;
+            border-radius: 0 4px 4px 0;
+            margin-top: 10px;
+        }
+        .report-block pre {
+            background: #11071c;
+            padding: 14px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #23113c;
+            margin: 12px 0;
+        }
+        .report-block code { color: #ec4899; font-size: 13px; }
+        .report-block pre code { color: #e2e8f0; }
+        .report-block h1, .report-block h2, .report-block h3 {
+            color: var(--cyber-blue); margin: 15px 0 10px 0; font-size: 16px; text-transform: uppercase;
+        }
+        
+        .terminal-footer {
+            border-top: 1px solid var(--violet-core);
+            background: #07030b;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .upload-wrapper { position: relative; overflow: hidden; display: inline-block; flex: 0 0 auto; }
+        .btn-action {
+            background: transparent; border: 1px solid var(--violet-glow); color: var(--text-white);
+            padding: 10px 20px; font-family: inherit; font-size: 13px; font-weight: 600;
+            border-radius: 4px; cursor: pointer; transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .btn-action:hover {
+            background: var(--violet-core); box-shadow: 0 0 12px var(--violet-glow); border-color: var(--cyber-blue);
+        }
+        #fileInput { position: absolute; font-size: 100px; opacity: 0; right: 0; top: 0; cursor: pointer; }
+        .input-line { flex: 1; font-size: 14px; color: var(--text-dim); }
+        .loader { display: none; color: var(--cyber-blue); font-size: 14px; animation: blink 1s infinite; }
+        .ambient-star {
+            position: absolute;
+            border-radius: 999px;
+            background: rgba(248, 250, 252, 0.9);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.38);
+            opacity: 0.3;
+            animation: floatStar var(--duration) ease-in-out infinite;
+            animation-delay: var(--delay);
+        }
+        .ambient-star.twinkle {
+            box-shadow: 0 0 18px rgba(139, 92, 246, 0.5);
+            animation-name: floatStar, twinkle;
+        }
+        .ambient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(22px);
+            opacity: 0.45;
+            animation: blobFloat var(--duration) ease-in-out infinite, blobGlow 10s ease-in-out infinite;
+            animation-delay: var(--delay);
+        }
+        .ambient-blob.violet { background: radial-gradient(circle, rgba(139, 92, 246, 0.58), rgba(76, 29, 149, 0.08) 70%, transparent 74%); }
+        .ambient-blob.blue { background: radial-gradient(circle, rgba(0, 240, 255, 0.4), rgba(0, 240, 255, 0.04) 72%, transparent 75%); }
+        .ambient-blob.rose { background: radial-gradient(circle, rgba(244, 114, 182, 0.3), rgba(244, 114, 182, 0.05) 72%, transparent 76%); }
+        .welcome-copy {
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+        .welcome-cursor {
+            display: inline-block;
+            width: 0.65ch;
+            color: var(--cyber-blue);
+            animation: cursorBlink 0.9s steps(1) infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes driftGlow {
+            0% { transform: translate3d(-3%, -2%, 0) scale(1); }
+            100% { transform: translate3d(3%, 2%, 0) scale(1.18); }
+        }
+        @keyframes driftPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        @keyframes starDrift {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-12%, 8%, 0); }
+        }
+        @keyframes starPulse {
+            0%, 100% { opacity: 0.22; }
+            50% { opacity: 0.36; }
+        }
+        @keyframes floatStar {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, -24px, 0); }
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.18; }
+            50% { opacity: 0.55; }
+        }
+        @keyframes blobFloat {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(0, -32px, 0) scale(1.12); }
+        }
+        @keyframes blobGlow {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.58; }
+        }
+        @keyframes terminalFloat {
+            0%, 100% { transform: translate3d(0, 0, 0) rotateX(0.2deg); }
+            50% { transform: translate3d(0, -10px, 0) rotateX(-0.2deg); }
+        }
+        @keyframes sheenSweep {
+            0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+            12% { opacity: 0.9; }
+            50% { transform: translateX(120%) skewX(-18deg); opacity: 0.35; }
+            100% { transform: translateX(120%) skewX(-18deg); opacity: 0; }
+        }
+        @keyframes cursorBlink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body::before,
+            body::after,
+            .terminal-container,
+            .terminal-container::before,
+            .ambient-star,
+            .ambient-blob {
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient-field" id="ambientField" aria-hidden="true"></div>
+
+<div class="terminal-container">
+    <div class="terminal-header">
+        <div class="header-title">[ VULNERABILITY AUDITING ENGINE ]</div>
+    </div>
+
+    <div class="terminal-body" id="terminalLogs">
+        <div class="log-entry">
+            <span class="system-prefix">SHIN:</span>
+            <span class="telemetry-status welcome-copy" id="welcomeMessage"></span><span class="welcome-cursor" aria-hidden="true">|</span>
+        </div>
+    </div>
+
+    <div class="terminal-footer">
+        <span class="system-prefix">OPERATIVE$</span>
+        <div class="upload-wrapper">
+            <button class="btn-action">UPLOAD_TARGET_FILE</button>
+            <input type="file" id="fileInput" onchange="processAndUploadFile()">
+        </div>
+        <div class="input-line" id="fileStatusText">No target file active inside memory array.</div>
+        <div class="loader" id="terminalLoader">RUNNING INTELLIGENT COMPILATION AUDIT SEQUENCES...</div>
+    </div>
+</div>
+
+<script>
+    // Pointing to current runtime relative location because frontend is served directly by backend
+    const BACKEND_API_ROUTING = window.location.origin;
+    const logsContainer = document.getElementById('terminalLogs');
+    const statusText = document.getElementById('fileStatusText');
+    const loaderDisplay = document.getElementById('terminalLoader');
+    const ambientField = document.getElementById('ambientField');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+
+    const welcomeText = "Hey there\nIf you have code in mind that you would like to be checked, then I'll be happy to assist.";
+
+    function typeWelcomeMessage() {
+        let charIndex = 0;
+        welcomeMessage.textContent = '';
+
+        function step() {
+            welcomeMessage.textContent = welcomeText.slice(0, charIndex);
+            charIndex += 1;
+            if (charIndex <= welcomeText.length) {
+                window.setTimeout(step, charIndex < 18 ? 40 : 18);
+            }
+        }
+
+        step();
+    }
+
+    function createAmbientLayer() {
+        const stars = 96;
+        for (let index = 0; index < stars; index += 1) {
+            const star = document.createElement('span');
+            star.className = `ambient-star${index % 5 === 0 ? ' twinkle' : ''}`;
+            const size = 1 + Math.random() * 3.2;
+            const left = Math.random() * 100;
+            const top = Math.random() * 100;
+            const duration = 4 + Math.random() * 10;
+            const delay = -(Math.random() * duration);
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.left = `${left}%`;
+            star.style.top = `${top}%`;
+            star.style.setProperty('--duration', `${duration}s`);
+            star.style.setProperty('--delay', `${delay}s`);
+            ambientField.appendChild(star);
+        }
+
+        const blobs = [
+            { kind: 'violet', left: '6%', top: '10%', size: '420px', duration: '14s', delay: '-4s' },
+            { kind: 'blue', left: '68%', top: '6%', size: '360px', duration: '16s', delay: '-9s' },
+            { kind: 'rose', left: '60%', top: '62%', size: '300px', duration: '18s', delay: '-2s' },
+            { kind: 'violet', left: '18%', top: '70%', size: '240px', duration: '20s', delay: '-11s' }
+        ];
+
+        for (const blobConfig of blobs) {
+            const blob = document.createElement('span');
+            blob.className = `ambient-blob ${blobConfig.kind}`;
+            blob.style.left = blobConfig.left;
+            blob.style.top = blobConfig.top;
+            blob.style.width = blobConfig.size;
+            blob.style.height = blobConfig.size;
+            blob.style.setProperty('--duration', blobConfig.duration);
+            blob.style.setProperty('--delay', blobConfig.delay);
+            ambientField.appendChild(blob);
+        }
+    }
+
+    createAmbientLayer();
+    typeWelcomeMessage();
+
+    async function processAndUploadFile() {
+        const input = document.getElementById('fileInput');
+        if (!input.files || input.files.length === 0) return;
+
+        const targetFile = input.files[0];
+        statusText.innerText = `CACHED: ${targetFile.name}`;
+        
+        printTerminalLog("SYS_IO", `Target file intercepted: ${targetFile.name}. Preparing multipart packets.`);
+        loaderDisplay.style.display = "block";
+        
+        const formPacket = new FormData();
+        formPacket.append("file", targetFile);
+
+        try {
+            printTerminalLog("SYS_NET", "Transmitting script streams to the FastAPI kernel pipeline.");
+            
+            const serverResponse = await fetch(`${BACKEND_API_ROUTING}/api/v1/audit`, {
+                method: "POST",
+                body: formPacket
+            });
+
+            if (!serverResponse.ok) {
+                const faultData = await serverResponse.json();
+                throw new Error(faultData.detail || "Inference packet validation error.");
+            }
+
+            const extractionOutput = await serverResponse.json();
+            printTerminalLog("SYS_CORE", "Static assessment finalized. Rendering logical vulnerability breakdown matrix:");
+            
+            renderAuditReportBlock(extractionOutput.analysis_report);
+
+        } catch (error) {
+            printTerminalLog("ERR_CRIT", `Sequence disrupted: ${error.message}`);
+        } finally {
+            loaderDisplay.style.display = "none";
+            input.value = ""; 
+        }
+    }
+
+    function printTerminalLog(prefix, message) {
+        const entry = document.createElement('div');
+        entry.className = "log-entry";
+        let prefixColor = "var(--violet-glow)";
+        if(prefix === "ERR_CRIT") prefixColor = "var(--alert-red)";
+        if(prefix === "SYS_CORE") prefixColor = "var(--cyber-blue)";
+
+        entry.innerHTML = `<span class="system-prefix" style="color: ${prefixColor}">${prefix}:</span><span>${message}</span>`;
+        logsContainer.appendChild(entry);
+        logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+
+    function renderAuditReportBlock(markdownContent) {
+        const reportWrapper = document.createElement('div');
+        reportWrapper.className = "report-block";
+        reportWrapper.innerHTML = marked.parse(markdownContent);
+        logsContainer.appendChild(reportWrapper);
+        logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+</script>
+</body>
+</html>
